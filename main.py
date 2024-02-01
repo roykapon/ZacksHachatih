@@ -79,8 +79,12 @@ class MyBot(ArazimBattlesBot):
     emote_index = 0
 
     def get_monkey(self) -> Monkeys:
+        if self.context.get_current_time() == 0:
+            return
         banned = set(self.context.get_banned_monkeys())
-        return list(set(MONKEY_PREFERENCE) - banned)[0]
+        unbanned = list(set(MONKEY_PREFERENCE) - banned)
+        chosen = min(unbanned, key=lambda m: MONKEY_PREFERENCE.index(m))
+        return chosen
 
     def setup(self) -> None:
         self.context.ban_monkey(Monkeys.DART_MONKEY)
