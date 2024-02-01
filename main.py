@@ -2,7 +2,7 @@ from api import EcoBloons, Bloons
 from api import ArazimBattlesBot, Emote, Exceptions, Monkeys, Maps
 
 # Only pick the cool emotes of course
-EMOTES = [Emote.NONE, Emote.COOL, Emote.LAUGHING, Emote.LOVE]
+EMOTES = [Emote.THUMBS_DOWN]
 
 BLOON_HEALTH: dict[Bloons, int] = {
     Bloons.RED: 1,
