@@ -103,9 +103,8 @@ class MyBot(ArazimBattlesBot):
 
     def get_bloon_money(self) -> int:
         time = self.context.get_current_time()
-        if 0 <= time % 50 <= 3:
+        if 0 <= time % 25 <= 5:
             return max(0, self.total_money - self.sent_money)
-        # return max(0, self.total_money // 2 - self.sent_money)
         return 0
 
     def setup(self) -> None:
@@ -114,7 +113,8 @@ class MyBot(ArazimBattlesBot):
         self.sent_money = 0
 
     def run(self) -> None:
-        self.context.log_info(f"sending {self.get_bloon_money()} money")
+        if self.get_bloon_money() > 0:
+            self.context.log_info(f"sending {self.get_bloon_money()} money")
         spent = self.send_bloons(self.get_bloon_money())
         if spent:
             self.sent_money += spent
