@@ -1,4 +1,5 @@
 from api import ArazimBattlesBot, Emote, Exceptions, Monkeys
+from api import EcoBloons
 
 # Only pick the cool emotes of course
 EMOTES = [Emote.NONE, Emote.COOL, Emote.LAUGHING, Emote.LOVE]
@@ -14,6 +15,9 @@ class MyBot(ArazimBattlesBot):
         self.context.ban_monkey(Monkeys.BOMB_TOWER)
 
     def run(self) -> None:
+        if self.context.get_current_time() % 5 == 0:
+            self.send_bloons()
+
         if self.context.get_current_time() % 5 == 0:
             self.context.log_info("Placing Monkeys!")
 
@@ -52,3 +56,23 @@ class MyBot(ArazimBattlesBot):
             targets = self.context.get_monkey_targets(monkey_index)
             if len(targets) > 0:
                 self.context.target_bloon(monkey_index, targets[0].index)
+
+    def send_bloons(self):
+        time = self.context.get_current_time()
+        index = 1 - self.context.get_current_player_index()
+        if time < 29:
+            return
+
+        if 29 < time < 68:
+            result = self.context.send_bloons(index, EcoBloons.SPACED_BLUE)
+            self.context.log_info(f"Sending BLUE. {result}")
+            return
+
+        if 68 < time < 161:
+            result = self.context.send_bloons(index, EcoBloons.SPACED_PINK)
+            self.context.log_info(f"Sending PINK. {result}")
+            return
+
+        if 161 < time:
+            result = self.context.send_bloons(index, EcoBloons.GROUPED_YELLOW)
+            self.context.log_info(f"Sending YELLOW. {result}")
