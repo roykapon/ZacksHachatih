@@ -101,6 +101,11 @@ class MyBot(ArazimBattlesBot):
         chosen = min(unbanned, key=lambda m: MONKEY_PREFERENCE.index(m))
         return chosen
 
+    def get_bloon_money(self) -> int:
+        time = self.context.get_current_time()
+        if time < 100:
+            return self.context.get_money() // 2
+
     def setup(self) -> None:
         self.context.ban_monkey(Monkeys.DART_MONKEY)
 
@@ -191,6 +196,8 @@ class MyBot(ArazimBattlesBot):
         spent = 0
         while money >= BLOON_COST[send_bloon]:
             result = self.context.send_bloons(index, send_bloon)
+            if result != Exceptions.OK:
+                return spent
             spent += BLOON_COST[send_bloon]
             # self.context.log_info(f"Sending {send_bloon}: {result}")
             money -= BLOON_COST[send_bloon]
