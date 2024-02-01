@@ -179,14 +179,20 @@ class MyBot(ArazimBattlesBot):
         elif 68 <= time < 161:
             send_bloon = EcoBloons.SPACED_PINK
 
-        elif 161 <= time:
+        elif 161 <= time < 196:
             send_bloon = EcoBloons.GROUPED_YELLOW
+        elif 196 <= time < 237:
+            send_bloon = EcoBloons.GROUPED_PINK
+        elif 237 <= time < 275:
+            send_bloon = EcoBloons.GROUPED_WHITE
+        elif 275 <= time:
+            send_bloon = EcoBloons.GROUPED_BLACK
 
         spent = 0
         while money >= BLOON_COST[send_bloon]:
             result = self.context.send_bloons(index, send_bloon)
             spent += BLOON_COST[send_bloon]
-            self.context.log_info(f"Sending {send_bloon}: {result}")
+            # self.context.log_info(f"Sending {send_bloon}: {result}")
             money -= BLOON_COST[send_bloon]
 
         return spent
