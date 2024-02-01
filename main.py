@@ -71,6 +71,21 @@ LOCATIONS = {
 
 MONKEY_PREFERENCE = [Monkeys.DART_MONKEY, Monkeys.NINJA_MONKEY, Monkeys.SNIPER_MONKEY]
 
+BLOON_COST: dict[EcoBloons, int] = {
+    EcoBloons.GROUPED_RED: 25,
+    EcoBloons.SPACED_BLUE: 25,
+    EcoBloons.GROUPED_BLUE: 42,
+    EcoBloons.SPACED_PINK: 42,
+    EcoBloons.GROUPED_GREEN: 60,
+    EcoBloons.GROUPED_YELLOW: 75,
+    EcoBloons.SPACED_WHITE: 90,
+    EcoBloons.GROUPED_PINK: 90,
+    EcoBloons.SPACED_LEAD: 90,
+    EcoBloons.GROUPED_WHITE: 125,
+    EcoBloons.SPACED_ZEBRA: 125,
+    EcoBloons.GROUPED_BLACK: 150,
+}
+
 
 class MyBot(ArazimBattlesBot):
     monkey_count = 0
@@ -86,11 +101,23 @@ class MyBot(ArazimBattlesBot):
         chosen = min(unbanned, key=lambda m: MONKEY_PREFERENCE.index(m))
         return chosen
 
+    def get_bloon_money(self) -> int:
+        time = self.context.get_current_time()
+        if 0 <= time % 25 <= 5:
+            return max(0, self.total_money - self.sent_money)
+        return 0
+
     def setup(self) -> None:
         self.context.ban_monkey(Monkeys.DART_MONKEY)
+        self.total_money = 0
+        self.sent_money = 0
 
     def run(self) -> None:
-        self.send_bloons()
+        if self.get_bloon_money() > 0:
+            self.context.log_info(f"sending {self.get_bloon_money()} money")
+        spent = self.send_bloons(self.get_bloon_money())
+        if spent:
+            self.sent_money += spent
 
         if self.context.get_current_time() % 5 == 0:
             self.context.log_info("Placing Monkeys!")
@@ -143,28 +170,40 @@ class MyBot(ArazimBattlesBot):
             if len(targets) > 0:
                 self.context.target_bloon(monkey_index, targets[0].index)
 
-    def send_bloons(self):
+    def send_bloons(self, money: int) -> int:
+        """
+        Sends bloons with up to `money` cost, returns how much money was
+        actually spent.
+        """
         time = self.context.get_current_time()
-        index = 1 - self.context.get_current_player_index()
+        players = set(range(self.context.get_player_count()))
+        enemies = players - {self.context.get_current_player_index()}
+        index = list(enemies)[0]
         if time < 29:
-            return
+            return 0
 
-        if 29 < time < 68:
-            if time % 5 != 0:
-                return
-            result = self.context.send_bloons(index, EcoBloons.SPACED_BLUE)
-            self.context.log_info(f"Sending BLUE. {result}")
-            return
+        elif 29 <= time < 68:
+            send_bloon = EcoBloons.SPACED_BLUE
 
-        if 68 < time < 161:
-            if time % 5 != 0:
-                return
-            result = self.context.send_bloons(index, EcoBloons.SPACED_PINK)
-            self.context.log_info(f"Sending PINK. {result}")
-            return
+        elif 68 <= time < 161:
+            send_bloon = EcoBloons.SPACED_PINK
 
-        if 161 < time:
-            if self.context.get_money() < 150:
-                return
-            result = self.context.send_bloons(index, EcoBloons.GROUPED_YELLOW)
-            self.context.log_info(f"Sending YELLOW. {result}")
+        elif 161 <= time < 196:
+            send_bloon = EcoBloons.GROUPED_YELLOW
+        elif 196 <= time < 237:
+            send_bloon = EcoBloons.GROUPED_PINK
+        elif 237 <= time < 275:
+            send_bloon = EcoBloons.GROUPED_WHITE
+        elif 275 <= time:
+            send_bloon = EcoBloons.GROUPED_BLACK
+
+        spent = 0
+        while money >= BLOON_COST[send_bloon]:
+            result = self.context.send_bloons(index, send_bloon)
+            if result != Exceptions.OK:
+                return spent
+            spent += BLOON_COST[send_bloon]
+            # self.context.log_info(f"Sending {send_bloon}: {result}")
+            money -= BLOON_COST[send_bloon]
+
+        return spent
