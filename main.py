@@ -15,8 +15,7 @@ class MyBot(ArazimBattlesBot):
         self.context.ban_monkey(Monkeys.BOMB_TOWER)
 
     def run(self) -> None:
-        if self.context.get_current_time() % 5 == 0:
-            self.send_bloons()
+        self.send_bloons()
 
         if self.context.get_current_time() % 5 == 0:
             self.context.log_info("Placing Monkeys!")
@@ -64,15 +63,21 @@ class MyBot(ArazimBattlesBot):
             return
 
         if 29 < time < 68:
+            if time % 5 != 0:
+                return
             result = self.context.send_bloons(index, EcoBloons.SPACED_BLUE)
             self.context.log_info(f"Sending BLUE. {result}")
             return
 
         if 68 < time < 161:
+            if time % 5 != 0:
+                return
             result = self.context.send_bloons(index, EcoBloons.SPACED_PINK)
             self.context.log_info(f"Sending PINK. {result}")
             return
 
         if 161 < time:
+            if self.context.get_money() < 150:
+                return
             result = self.context.send_bloons(index, EcoBloons.GROUPED_YELLOW)
             self.context.log_info(f"Sending YELLOW. {result}")
