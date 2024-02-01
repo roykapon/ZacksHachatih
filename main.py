@@ -269,7 +269,7 @@ class MyBot(ArazimBattlesBot):
 
     def chose_place_and_type_to_place(self):
         banned = self.context.get_banned_monkeys()
-        positions = LOCATIONS[self.context.get_map()]
+        positions = LOCATIONS.get(self.context.get_map(), {"dart": [], "tack": []})
         if self.attempted_position >= len(positions["dart"]):
             temp = self.attempted_position % len(positions["dart"]) + 2
             if temp >= len(positions["tack"]):
