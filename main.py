@@ -4,6 +4,20 @@ from api import EcoBloons
 # Only pick the cool emotes of course
 EMOTES = [Emote.NONE, Emote.COOL, Emote.LAUGHING, Emote.LOVE]
 
+BLOON_HEALTH: dict[str, int] = {
+    "RED": 1,
+    "BLUE": 2,
+    "GREEN": 3,
+    "YELLOW": 4,
+    "PINK": 5,
+    "BLACK": 11,
+    "WHITE": 11,
+    "LEAD": 23,
+    "ZEBRA": 23,
+    "RAINBOW": 47,
+    "CERAMIC": 104,
+}
+
 
 class MyBot(ArazimBattlesBot):
     monkey_count = 0
