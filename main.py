@@ -69,6 +69,8 @@ LOCATIONS = {
     ],
 }
 
+MONKEY_PREFERENCE = [Monkeys.DART_MONKEY, Monkeys.NINJA_MONKEY, Monkeys.SNIPER_MONKEY]
+
 
 class MyBot(ArazimBattlesBot):
     monkey_count = 0
@@ -76,8 +78,12 @@ class MyBot(ArazimBattlesBot):
     attempted_position = 0
     emote_index = 0
 
+    def get_monkey(self) -> Monkeys:
+        banned = set(self.context.get_banned_monkeys())
+        return list(set(MONKEY_PREFERENCE) - banned)[0]
+
     def setup(self) -> None:
-        self.context.ban_monkey(Monkeys.BOMB_TOWER)
+        self.context.ban_monkey(Monkeys.DART_MONKEY)
 
     def run(self) -> None:
         self.send_bloons()
@@ -90,7 +96,7 @@ class MyBot(ArazimBattlesBot):
             positions = LOCATIONS[self.context.get_map()]
 
             result = self.context.place_monkey(
-                Monkeys.DART_MONKEY,
+                self.get_monkey(),
                 (
                     positions[self.attempted_position][0],
                     positions[self.attempted_position][1],
