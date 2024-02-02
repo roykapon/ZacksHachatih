@@ -97,6 +97,26 @@ BLOON_COST: dict[EcoBloons, int] = {
 }
 
 
+PLACE_COST: dict[Monkeys, int] = {
+    Monkeys.DART_MONKEY: 200,
+    Monkeys.TACK_SHOOTER: 360,
+    Monkeys.NINJA_MONKEY: 500,
+    Monkeys.SUPER_MONKEY: 3000,
+    Monkeys.BOMB_TOWER: 650,
+    Monkeys.SNIPER_MONKEY: 350
+}
+
+
+UPGRADE_COST: dict[Monkeys, tuple[list[int], list[int]]] = {
+    Monkeys.DART_MONKEY: ([90, 160, 500, 1900], [140, 170, 475]),
+    Monkeys.TACK_SHOOTER: ([210, 300], [75, 175]),
+    Monkeys.NINJA_MONKEY: ([300, 250, 700, 3000], []),
+    Monkeys.SUPER_MONKEY: ([3000, 4000], [800, 1200]),
+    Monkeys.BOMB_TOWER: ([200], [400, 400]),
+    Monkeys.SNIPER_MONKEY: ([300, 1800, 3500], [350, 300, 2400])
+}
+
+
 class MyBot(ArazimBattlesBot):
     monkey_count = 0
     monkey_levels = []
@@ -115,7 +135,7 @@ class MyBot(ArazimBattlesBot):
 
     def get_monkey(self) -> Monkeys:
         if self.context.get_current_time() == 0:
-            return
+            return None
         banned = set(self.context.get_banned_monkeys())
         unbanned = list(set(MONKEY_PREFERENCE) - banned)
         chosen = min(unbanned, key=lambda m: MONKEY_PREFERENCE.index(m))
