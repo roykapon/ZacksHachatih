@@ -194,28 +194,38 @@ class MyBot(ArazimBattlesBot):
             damage[target.uid] += 1
 
 
-    def send_bloons(self):
+    def send_bloons(self, money: int) -> int:
+        """
+        Sends bloons with up to `money` cost, returns how much money was
+        actually spent.
+        """
         time = self.context.get_current_time()
-        index = 1 - self.context.get_current_player_index()
+        players = set(range(self.context.get_player_count()))
+        enemies = players - {self.context.get_current_player_index()}
+        index = list(enemies)[0]
         if time < 29:
-            return
+            return 0
 
-        if 29 < time < 68:
-            if time % 5 != 0:
-                return
-            result = self.context.send_bloons(index, EcoBloons.SPACED_BLUE)
-            self.context.log_info(f"Sending BLUE. {result}")
-            return
+        elif 29 <= time < 68:
+            send_bloon = EcoBloons.SPACED_BLUE
 
-        if 68 < time < 161:
-            if time % 5 != 0:
-                return
-            result = self.context.send_bloons(index, EcoBloons.SPACED_PINK)
-            self.context.log_info(f"Sending PINK. {result}")
-            return
+        elif 68 <= time < 161:
+            send_bloon = EcoBloons.SPACED_PINK
 
-        if 161 < time:
-            if self.context.get_money() < 150:
-                return
-            result = self.context.send_bloons(index, EcoBloons.GROUPED_YELLOW)
-            self.context.log_info(f"Sending YELLOW. {result}")
+        elif 161 <= time < 196:
+            send_bloon = EcoBloons.GROUPED_YELLOW
+        elif 196 <= time < 237:
+            send_bloon = EcoBloons.GROUPED_PINK
+        elif 237 <= time < 275:
+            send_bloon = EcoBloons.GROUPED_WHITE
+        elif 275 <= time:
+            send_bloon = EcoBloons.GROUPED_BLACK
+
+        spent = 0
+        while money >= BLOON_COST[send_bloon]:
+            result = self.context.send_bloons(index, send_bloon)
+            spent += BLOON_COST[send_bloon]
+            # self.context.log_info(f"Sending {send_bloon}: {result}")
+            money -= BLOON_COST[send_bloon]
+
+        return spent
