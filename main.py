@@ -126,13 +126,13 @@ class MyBot(ArazimBattlesBot):
         if self.context.get_current_time() % 3 == 0:
             self.total_money += self.context.get_eco()
 
-        if self.context.get_current_time() % 5 == 0:
+        if self.context.get_current_time() % 5 == 0 and all([monkey_level >= 3 for monkey_level in self.monkey_levels]):
             while(True):
                 # self.context.log_info("Placing Monkeys!")
 
                 # Place Monkeys
                 # self.context.log_info(self.context.get_map())
-                positions = LOCATIONS[self.context.get_map()]
+                positions = LOCATIONS.get(self.context.get_map(), [])
 
                 result = self.context.place_monkey(
                     self.get_monkey(),
