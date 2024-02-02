@@ -130,9 +130,6 @@ class MyBot(ArazimBattlesBot):
             self.context.bloon_boost()
 
         for monkey_index in range(self.monkey_count):
-            # Upgrade Monkeys
-            if self.context.get_current_time() > 20:
-                self.upgrade(monkey_index)
 
             # Target Bloons
             targets = self.context.get_monkey_targets(monkey_index)
