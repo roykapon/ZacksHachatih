@@ -129,7 +129,21 @@ class MyBot(ArazimBattlesBot):
                         self.monkey_levels[monkey_index] += 1
 
             # Target Bloons
+            self.target_monkeys()
+
+    def target_monkeys(self) -> None:
+        current_index = self.context.get_current_player_index()
+        damage = defaultdict(int)
+        for monkey_index in range(self.monkey_count):
             targets = self.context.get_monkey_targets(monkey_index)
+            for target in targets:
+                if BLOON_TYPE_TO_DAMAGE[target.type] == damage[target.uid]:
+                    continue
+                self.context.target_bloon(monkey_index, target.index)
+                damage[target.uid] += 1
+                break
+
+
             if len(targets) > 0:
                 self.context.target_bloon(monkey_index, targets[0].index)
 
