@@ -4,6 +4,16 @@ from api import ArazimBattlesBot, Emote, Exceptions, Monkeys, Maps
 # Only pick the cool emotes of course
 EMOTES = [Emote.THUMBS_DOWN]
 
+MONKEYTYPE_TO_STRING = {
+    Monkeys.DART_MONKEY: "dart",
+    Monkeys.TACK_SHOOTER: "tack",
+    Monkeys.NINJA_MONKEY: "dart",
+    Monkeys.SUPER_MONKEY: "dart",
+    Monkeys.SNIPER_MONKEY: "dart",
+    Monkeys.BOMB_TOWER: "tack"
+}
+
+
 BLOON_HEALTH: dict[Bloons, int] = {
     Bloons.RED: 1,
     Bloons.BLUE: 2,
@@ -37,6 +47,7 @@ class MyBot(ArazimBattlesBot):
     monkey_levels = []
     attempted_position = 0
     emote_index = 0
+    
 
     def get_monkey(self) -> Monkeys:
         if self.context.get_current_time() == 0:
@@ -46,6 +57,25 @@ class MyBot(ArazimBattlesBot):
         chosen = min(unbanned, key=lambda m: MONKEY_PREFERENCE.index(m))
         return chosen
 
+    def chose_type_to_place(self):
+        banned = self.context.get_banned_monkeys()
+        if self.attempted_position < 2:
+            if Monkeys.TACK_SHOOTER not in banned:
+                return Monkeys.TACK_SHOOTER
+            elif Monkeys.BOMB_TOWER not in banned:
+                return Monkeys.BOMB_TOWER
+            else:
+                return Monkeys.DART_MONKEY
+            
+        else:
+            if Monkeys.DART_MONKEY not in banned:
+                return Monkeys.DART_MONKEY
+            elif Monkeys.NINJA_MONKEY not in banned:
+                return Monkeys.NINJA_MONKEY
+            else:
+                return Monkeys.SNIPER_MONKEY
+            
+    
     def setup(self) -> None:
         self.context.ban_monkey(Monkeys.DART_MONKEY)
 
@@ -57,10 +87,13 @@ class MyBot(ArazimBattlesBot):
 
             # Place Monkeys
             self.context.log_info(self.context.get_map())
-            positions = LOCATIONS[self.context.get_map()]
+            
+            monkey_type_place = self.chose_type_to_place()
+            monkey_string_place = MONKEYTYPE_TO_STRING[monkey_type_place]
+            positions = LOCATIONS[self.context.get_map()][monkey_string_place]
 
             result = self.context.place_monkey(
-                self.get_monkey(),
+                monkey_type_place,
                 (
                     positions[self.attempted_position][0],
                     positions[self.attempted_position][1],
