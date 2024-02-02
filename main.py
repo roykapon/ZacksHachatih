@@ -62,10 +62,10 @@ class MyBot(ArazimBattlesBot):
         if self.attempted_position < 2:
             if Monkeys.TACK_SHOOTER not in banned:
                 return Monkeys.TACK_SHOOTER
-            elif Monkeys.BOMB_TOWER not in banned:
-                return Monkeys.BOMB_TOWER
-            else:
+            elif Monkeys.DART_MONKEY not in banned:
                 return Monkeys.DART_MONKEY
+            else:
+                return Monkeys.NINJA_MONKEY
             
         else:
             if Monkeys.DART_MONKEY not in banned:
@@ -77,7 +77,7 @@ class MyBot(ArazimBattlesBot):
             
     
     def setup(self) -> None:
-        self.context.ban_monkey(Monkeys.DART_MONKEY)
+        self.context.ban_monkey(Monkeys.TACK_SHOOTER) # ! TO CHANGE
 
     def run(self) -> None:
         self.send_bloons()
