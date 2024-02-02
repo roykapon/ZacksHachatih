@@ -1,4 +1,5 @@
 from api import ArazimBattlesBot, Emote, Exceptions, Monkeys, Maps
+from api import EcoBloons
 
 # Only pick the cool emotes of course
 EMOTES = [Emote.NONE, Emote.COOL, Emote.LAUGHING, Emote.LOVE]
