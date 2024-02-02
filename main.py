@@ -42,7 +42,6 @@ LOCATIONS = {
         [268, 312],
         [333, 250],
         [178, 480],
-        [282, 373],
         [65, 474],
         [227, 438],
         [168, 367],
@@ -68,7 +67,6 @@ LOCATIONS = {
         [196, 485],
     ],
 }
-
 
 class MyBot(ArazimBattlesBot):
     monkey_count = 0
@@ -132,14 +130,13 @@ class MyBot(ArazimBattlesBot):
             self.target_monkeys()
 
     def target_monkeys(self) -> None:
-        current_index = self.context.get_current_player_index()
         for monkey_index in range(self.monkey_count):
             targets = self.context.get_monkey_targets(monkey_index)
             damage = {}
-            for target in targets[::-1]:
+            for target in targets:
                 if target.uid not in damage:
                     damage[target.uid] = 0
-                if BLOON_TYPE_TO_DAMAGE[target.type] == damage[target.uid]:
+                if BLOON_HEALTH[target.type] == damage[target.uid]:
                     continue
                 self.context.target_bloon(monkey_index, target.index)
                 damage[target.uid] += 1
