@@ -77,10 +77,12 @@ class MyBot(ArazimBattlesBot):
     monkey_levels = []
     attempted_position = 0
     emote_index = 0
+    sending_money = 0
+    monkey_money = 0
 
     def get_monkey(self) -> Monkeys:
         if self.context.get_current_time() == 0:
-            return
+            return None
         banned = set(self.context.get_banned_monkeys())
         unbanned = list(set(MONKEY_PREFERENCE) - banned)
         chosen = min(unbanned, key=lambda m: MONKEY_PREFERENCE.index(m))
@@ -89,38 +91,66 @@ class MyBot(ArazimBattlesBot):
     def setup(self) -> None:
         self.context.ban_monkey(Monkeys.DART_MONKEY)
 
-    def run(self) -> None:
-        self.send_bloons()
 
-        if self.context.get_current_time() % 5 == 0:
-            self.context.log_info("Placing Monkeys!")
+    def update_current_money(self) -> tuple[int, int]:
+        def get_money_split(money_diff):
+            return int(0.5 * money_diff), money_diff - int(0.5 * money_diff)
 
-            # Place Monkeys
-            self.context.log_info(self.context.get_map())
-            positions = LOCATIONS[self.context.get_map()]
+        money_diff = self.context.get_money() - (self.sending_money + self.monkey_money)
+        current_sending_money, current_monkey_money = get_money_split(money_diff)
 
-            result = self.context.place_monkey(
-                self.get_monkey(),
-                (
-                    positions[self.attempted_position][0],
-                    positions[self.attempted_position][1],
-                )
-                if self.attempted_position < len(positions)
-                else (
-                    (24 * self.attempted_position) % 400 + 24,
-                    200 + 24 * (24 * self.attempted_position) // 400,
-                ),
+        self.sending_money += current_sending_money
+        self.monkey_money += current_monkey_money
+
+    def place(self):
+        self.context.log_info(self.context.get_map())
+        positions = LOCATIONS[self.context.get_map()]
+        m_type = self.get_monkey()
+        result = self.context.place_monkey(
+            m_type,
+            (
+                positions[self.attempted_position][0],
+                positions[self.attempted_position][1],
             )
-            if result == Exceptions.OK:
-                self.monkey_count += 1
-                self.monkey_levels.append(0)
-            elif (
+            if self.attempted_position < len(positions)
+            else (
+                (24 * self.attempted_position) % 400 + 24,
+                200 + 24 * (24 * self.attempted_position) // 400,
+            ),
+        )
+        if result == Exceptions.OK:
+            self.monkey_count += 1
+            self.monkey_levels.append([0, 0])
+            self.monkey_types.append(m_type)
+
+        elif (
                 result == Exceptions.OUT_OF_MAP
                 or result == Exceptions.TOO_CLOSE_TO_BLOON_ROUTE
                 or result == Exceptions.TOO_CLOSE_TO_OTHER_MONKEY
-            ):
-                self.context.log_warning(f"Couldn't place monkey because of: {result}")
-                self.attempted_position += 1
+        ):
+            self.context.log_warning(f"Couldn't place monkey because of: {result}")
+            self.attempted_position += 1
+
+    def upgrade(self, monkey_index):
+        m_type = self.monkey_types[monkey_index]
+        if self.monkey_levels[monkey_index][0] < UPGRADES[m_type][0]:
+            if self.context.upgrade_monkey(monkey_index, True):
+                self.monkey_levels[monkey_index][0] += 1
+        elif self.monkey_levels[monkey_index][1] < UPGRADES[m_type][1]:
+            if self.context.upgrade_monkey(monkey_index, False):
+                self.monkey_levels[monkey_index][1] += 1
+
+
+    def place_and_upgrade(self):
+        self.place()
+
+
+
+    def run(self) -> None:
+        self.update_current_money()
+
+        self.sending_money -= self.send_bloons()
+        self.monkey_money -= self.place_and_upgrade()
 
         if self.context.get_current_time() % 1 == 0:
             self.context.display_emote(EMOTES[self.emote_index])
@@ -138,10 +168,22 @@ class MyBot(ArazimBattlesBot):
                     if self.context.upgrade_monkey(monkey_index, True):
                         self.monkey_levels[monkey_index] += 1
 
-            # Target Bloons
+        # Target Bloons
+        self.target_monkeys()
+
+    def target_monkeys(self) -> None:
+        current_index = self.context.get_current_player_index()
+        damage = {}
+        for monkey_index in range(self.monkey_count):
             targets = self.context.get_monkey_targets(monkey_index)
-            if len(targets) > 0:
-                self.context.target_bloon(monkey_index, targets[0].index)
+            for target in targets:
+                if target.uid not in damage:
+                    damage[target.uid] = 0
+            if BLOON_HEALTH[target.type] == damage[target.uid]:
+                continue
+            self.context.target_bloon(monkey_index, target.index)
+            damage[target.uid] += 1
+
 
     def send_bloons(self):
         time = self.context.get_current_time()
