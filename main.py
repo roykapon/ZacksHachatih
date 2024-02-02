@@ -89,28 +89,21 @@ class MyBot(ArazimBattlesBot):
     sending_money = 0
     monkey_money = 0
 
+    monkey_types = []
+    to_upgrade = False
+    monkey_to_upgrade = 0
+    
+
+    def setup(self) -> None:
+        self.context.ban_monkey(Monkeys.NINJA_MONKEY)
+
     def get_monkey(self) -> Monkeys:
         if self.context.get_current_time() == 0:
-            return None
+            return
         banned = set(self.context.get_banned_monkeys())
         unbanned = list(set(MONKEY_PREFERENCE) - banned)
         chosen = min(unbanned, key=lambda m: MONKEY_PREFERENCE.index(m))
         return chosen
-
-
-    def setup(self) -> None:
-        self.context.ban_monkey(Monkeys.DART_MONKEY)
-
-
-    def update_current_money(self) -> tuple[int, int]:
-        def get_money_split(money_diff):
-            return int(0.5 * money_diff), money_diff - int(0.5 * money_diff)
-
-        money_diff = self.context.get_money() - (self.sending_money + self.monkey_money)
-        current_sending_money, current_monkey_money = get_money_split(money_diff)
-
-        self.sending_money += current_sending_money
-        self.monkey_money += current_monkey_money
 
     def place(self):
         self.context.log_info(self.context.get_map())
@@ -130,10 +123,54 @@ class MyBot(ArazimBattlesBot):
         )
         if result == Exceptions.OK:
             self.monkey_count += 1
-            self.monkey_levels.append([0, 0])
+            self.monkey_levels.append([0,0])
             self.monkey_types.append(m_type)
-
+            
         elif (
+            result == Exceptions.OUT_OF_MAP
+            or result == Exceptions.TOO_CLOSE_TO_BLOON_ROUTE
+            or result == Exceptions.TOO_CLOSE_TO_OTHER_MONKEY
+        ):
+            self.context.log_warning(f"Couldn't place monkey because of: {result}")
+            self.attempted_position += 1
+
+    def upgrade(self, monkey_index):
+        m_type = self.monkey_types[monkey_index]
+        if self.monkey_levels[monkey_index][0] < UPGRADES[m_type][0]:
+            if self.context.upgrade_monkey(monkey_index, True):
+                self.monkey_levels[monkey_index][0] += 1
+                return True
+            
+        if self.monkey_levels[monkey_index][1] < UPGRADES[m_type][1]:
+            if self.context.upgrade_monkey(monkey_index, False):
+                self.monkey_levels[monkey_index][1] += 1
+                return True
+            
+        return False
+
+    def place_and_upgrade(self):
+        if not self.to_upgrade:
+            self.place()
+            self.to_upgrade = True
+        else:
+            self.upgrade(self.monkey_to_upgrade)
+            self.monkey_to_upgrade += 1
+            self.monkey_to_upgrade %= self.monkey_count()
+            self.to_upgrade = False
+    
+
+    def run(self) -> None:
+        if self.context.get_current_time() % 5 == 0:
+            self.context.log_info("Placing Monkeys!")
+
+            # Place Monkeys
+            result = self.context.place_monkey(
+                Monkeys.DART_MONKEY, (24 * self.attempted_position + 24, 400)
+            )
+            if result == Exceptions.OK:
+                self.monkey_count += 1
+                self.monkey_levels.append(0)
+            elif (
                 result == Exceptions.OUT_OF_MAP
                 or result == Exceptions.TOO_CLOSE_TO_BLOON_ROUTE
                 or result == Exceptions.TOO_CLOSE_TO_OTHER_MONKEY
