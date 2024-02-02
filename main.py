@@ -35,7 +35,7 @@ class MyBot(ArazimBattlesBot):
     
 
     def setup(self) -> None:
-        self.context.ban_monkey(Monkeys.SNIPER_MONKEY)
+        self.context.ban_monkey(Monkeys.TACK_SHOOTER)
 
     def chose_place_and_type_to_place(self):
         banned = self.context.get_banned_monkeys()
@@ -95,6 +95,10 @@ class MyBot(ArazimBattlesBot):
                 self.monkey_levels[monkey_index][1] += 1
                 return True
             
+        if self.monkey_levels[monkey_index][1] >= UPGRADES[m_type][1] and self.monkey_levels[monkey_index][0] >= UPGRADES[m_type][0]:
+            self.monkey_to_upgrade += 1
+            self.monkey_to_upgrade %= self.monkey_count
+            self.to_upgrade = False
         return False
 
     def place_and_upgrade(self):
@@ -103,9 +107,6 @@ class MyBot(ArazimBattlesBot):
             self.to_upgrade = True
         else:
             self.upgrade(self.monkey_to_upgrade)
-            self.monkey_to_upgrade += 1
-            self.monkey_to_upgrade %= self.monkey_count
-            self.to_upgrade = False
     
 
     def run(self) -> None:
