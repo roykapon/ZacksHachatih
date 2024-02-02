@@ -146,7 +146,7 @@ class MyBot(ArazimBattlesBot):
 
         return time % 25 == 0
 
-    def chose_place_and_type_to_place(self):
+    def chose_place_and_type_to_place(self, force_not_super=False):
         banned = self.context.get_banned_monkeys()
         positions = LOCATIONS[self.context.get_map()]
         if self.attempted_position >= len(positions["dart"]):
@@ -166,7 +166,7 @@ class MyBot(ArazimBattlesBot):
                 return Monkeys.NINJA_MONKEY, pos
             else:
                 return Monkeys.DART_MONKEY, pos
-        elif self.context.get_current_time() > 165:
+        elif self.context.get_current_time() > 165 and not force_not_super:
             if Monkeys.SUPER_MONKEY not in banned:
                 return Monkeys.SUPER_MONKEY, pos
             elif Monkeys.NINJA_MONKEY not in banned:
@@ -182,15 +182,16 @@ class MyBot(ArazimBattlesBot):
             else:
                 return Monkeys.TACK_SHOOTER, pos
 
-    def place(self):
-        m_type, pos = self.chose_place_and_type_to_place()
+    def place(self, force_not_super=False):
+        m_type, pos = self.chose_place_and_type_to_place(force_not_super)
         result = self.context.place_monkey(m_type,pos)
         if result == Exceptions.OK:
             self.attempted_position += 1
             self.monkey_count += 1
             self.monkey_levels.append([0,0])
             self.monkey_types.append(m_type)
-            
+        elif not force_not_super:
+            self.place(True)
         elif (
             result == Exceptions.OUT_OF_MAP
             or result == Exceptions.TOO_CLOSE_TO_BLOON_ROUTE
