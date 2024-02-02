@@ -251,7 +251,7 @@ class MyBot(ArazimBattlesBot):
             return int(self.eco_part * money_diff), money_diff - int(
                 self.eco_part * money_diff
             )
-
+        self.context.log_info(f"{self.sending_money=}, {self.monkey_money=}")
         money_diff = self.context.get_money() - (self.sending_money + self.monkey_money)
         current_sending_money, current_monkey_money = get_money_split(money_diff)
 
@@ -313,7 +313,6 @@ class MyBot(ArazimBattlesBot):
                 return Monkeys.TACK_SHOOTER, pos
 
     def place(self, allowed_money):
-        spent_money = 0
         m_type, pos = self.chose_place_and_type_to_place()
         if PLACE_COST[m_type] > allowed_money:
             return 0
@@ -323,7 +322,7 @@ class MyBot(ArazimBattlesBot):
             self.monkey_count += 1
             self.monkey_levels.append([0, 0])
             self.monkey_types.append(m_type)
-            spent_money += PLACE_COST[m_type]
+            return PLACE_COST[m_type]
 
         elif (
             result == Exceptions.OUT_OF_MAP
@@ -332,7 +331,8 @@ class MyBot(ArazimBattlesBot):
         ):
             self.context.log_warning(f"Couldn't place monkey because of: {result}")
             self.attempted_position += 1
-        return spent_money
+        return 0
+
 
     def upgrade(self, monkey_index, allowed_money):
         if monkey_index >= self.monkey_count:
@@ -362,7 +362,6 @@ class MyBot(ArazimBattlesBot):
         return 0
 
     def place_and_upgrade(self, allowed_money):
-        self.context.log_info(f"{allowed_money=}")
         place_money = 0
         upgrade_money = 0
         if not self.to_upgrade:
@@ -375,6 +374,16 @@ class MyBot(ArazimBattlesBot):
         return place_money + upgrade_money
 
     def run(self) -> None:
+        if self.context.get_current_time() < 50:
+            self.eco_part = 0
+        elif self.context.get_current_time() < 100:
+            self.eco_part = 0.3
+        elif self.context.get_current_time() < 200:
+            self.eco_part = 0.5
+        else:
+            self.eco_part = 0
+            self.monkey_money += self.sending_money // 2
+            self.sending_money -= self.sending_money // 2
         self.update_current_money()
 
         self.sending_money -= self.send_eco(self.sending_money)
