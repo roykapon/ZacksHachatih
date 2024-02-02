@@ -97,6 +97,7 @@ class MyBot(ArazimBattlesBot):
         chosen = min(unbanned, key=lambda m: MONKEY_PREFERENCE.index(m))
         return chosen
 
+
     def setup(self) -> None:
         self.context.ban_monkey(Monkeys.DART_MONKEY)
 
@@ -140,6 +141,7 @@ class MyBot(ArazimBattlesBot):
             self.context.log_warning(f"Couldn't place monkey because of: {result}")
             self.attempted_position += 1
 
+
     def upgrade(self, monkey_index):
         m_type = self.monkey_types[monkey_index]
         if self.monkey_levels[monkey_index][0] < UPGRADES[m_type][0]:
@@ -150,8 +152,12 @@ class MyBot(ArazimBattlesBot):
                 self.monkey_levels[monkey_index][1] += 1
 
 
+
     def place_and_upgrade(self):
+        curr_money = self.context.get_money()
+        self.upgrade()
         self.place()
+        return curr_money - self.context.get_money()
 
 
 
@@ -169,13 +175,6 @@ class MyBot(ArazimBattlesBot):
             self.context.tower_boost()
         if self.context.get_current_time() in [80, 95, 110]:
             self.context.bloon_boost()
-
-        for monkey_index in range(self.monkey_count):
-            # Upgrade Monkeys
-            if self.context.get_current_time() > 20:
-                if self.monkey_levels[monkey_index] < 4:
-                    if self.context.upgrade_monkey(monkey_index, True):
-                        self.monkey_levels[monkey_index] += 1
 
         # Target Bloons
         self.target_monkeys()
