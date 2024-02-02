@@ -53,18 +53,25 @@ class MyBot(ArazimBattlesBot):
             if Monkeys.TACK_SHOOTER not in banned:
                 pos = (positions["tack"][self.attempted_position][0], positions["tack"][self.attempted_position][1])
                 return Monkeys.TACK_SHOOTER, pos
-            elif Monkeys.DART_MONKEY not in banned:
-                return Monkeys.DART_MONKEY, pos
-            else:
-                return Monkeys.NINJA_MONKEY, pos
-            
-        else:
-            if Monkeys.DART_MONKEY not in banned:
-                return Monkeys.DART_MONKEY, pos
             elif Monkeys.NINJA_MONKEY not in banned:
                 return Monkeys.NINJA_MONKEY, pos
             else:
-                return Monkeys.SNIPER_MONKEY, pos
+                return Monkeys.DART_MONKEY, pos
+        elif self.context.get_current_time() > 230:
+            if Monkeys.SUPER_MONKEY not in banned:
+                return Monkeys.SUPER_MONKEY, pos
+            elif Monkeys.NINJA_MONKEY not in banned:
+                return Monkeys.NINJA_MONKEY, pos
+            else:
+                return Monkeys.DART_MONKEY, pos
+            
+        else:
+            if Monkeys.NINJA_MONKEY not in banned:
+                return Monkeys.NINJA_MONKEY, pos
+            elif Monkeys.DART_MONKEY not in banned:
+                return Monkeys.DART_MONKEY, pos
+            else:
+                return Monkeys.TACK_SHOOTER, pos
 
     def place(self):
         m_type, pos = self.chose_place_and_type_to_place()
