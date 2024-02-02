@@ -136,7 +136,7 @@ class MyBot(ArazimBattlesBot):
         damage = defaultdict(int)
         for monkey_index in range(self.monkey_count):
             targets = self.context.get_monkey_targets(monkey_index)
-            for target in targets:
+            for target in targets[::-1]:
                 if BLOON_TYPE_TO_DAMAGE[target.type] == damage[target.uid]:
                     continue
                 self.context.target_bloon(monkey_index, target.index)
