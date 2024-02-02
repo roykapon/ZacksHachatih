@@ -28,7 +28,7 @@ class MyBot(ArazimBattlesBot):
             positions = LOCATIONS[self.context.get_map()]
             
             result = self.context.place_monkey(
-                Monkeys.DART_MONKEY, (positions[self.attempted_position][0], positions[self.attempted_position][1])
+                Monkeys.DART_MONKEY, (positions[self.attempted_position][0], positions[self.attempted_position][1]) if self.attempted_position < len(positions) else ((24 * self.attempted_position) % 400 + 24, 200 + 24 * (24 * self.attempted_position) // 400)
             )
             if result == Exceptions.OK:
                 self.monkey_count += 1
