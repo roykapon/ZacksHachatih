@@ -186,7 +186,7 @@ class MyBot(ArazimBattlesBot):
 
     def setup(self) -> None:
         self.context.ban_monkey(Monkeys.TACK_SHOOTER)
-        self.eco_part = 0.7
+        self.eco_part = 0.3
 
     def eco_push(self) -> bool:
         return self.context.get_eco() > 600
@@ -312,14 +312,18 @@ class MyBot(ArazimBattlesBot):
             else:
                 return Monkeys.TACK_SHOOTER, pos
 
-    def place(self):
+    def place(self, allowed_money):
+        spent_money = 0
         m_type, pos = self.chose_place_and_type_to_place()
+        if PLACE_COST[m_type] > allowed_money:
+            return 0
         result = self.context.place_monkey(m_type, pos)
         if result == Exceptions.OK:
             self.attempted_position += 1
             self.monkey_count += 1
             self.monkey_levels.append([0, 0])
             self.monkey_types.append(m_type)
+            spent_money += PLACE_COST[m_type]
 
         elif (
             result == Exceptions.OUT_OF_MAP
@@ -328,22 +332,25 @@ class MyBot(ArazimBattlesBot):
         ):
             self.context.log_warning(f"Couldn't place monkey because of: {result}")
             self.attempted_position += 1
+        return spent_money
 
-    def upgrade(self, monkey_index):
+    def upgrade(self, monkey_index, allowed_money):
         if monkey_index >= self.monkey_count:
             self.to_upgrade = False
-            return False
+            return 0
 
         m_type = self.monkey_types[monkey_index]
         if self.monkey_levels[monkey_index][0] < UPGRADES[m_type][0]:
-            if self.context.upgrade_monkey(monkey_index, True):
+            if (allowed_money >= UPGRADE_COST[m_type][0][self.monkey_levels[monkey_index][0]] and
+                    self.context.upgrade_monkey(monkey_index, True)):
                 self.monkey_levels[monkey_index][0] += 1
-                return True
+                return UPGRADE_COST[m_type][0][self.monkey_levels[monkey_index][0]]
 
         if self.monkey_levels[monkey_index][1] < UPGRADES[m_type][1]:
-            if self.context.upgrade_monkey(monkey_index, False):
+            if (allowed_money >= UPGRADE_COST[m_type][1][self.monkey_levels[monkey_index][1]] and
+                    self.context.upgrade_monkey(monkey_index, False)):
                 self.monkey_levels[monkey_index][1] += 1
-                return True
+                return UPGRADE_COST[m_type][1][self.monkey_levels[monkey_index][1]]
 
         if (
             self.monkey_levels[monkey_index][1] >= UPGRADES[m_type][1]
@@ -351,21 +358,27 @@ class MyBot(ArazimBattlesBot):
         ):
             self.monkey_to_upgrade += 1
             self.monkey_to_upgrade %= self.monkey_count
-            self.to_upgrade = False
-        return False
+            self.to_upgrade = 0
+        return 0
 
-    def place_and_upgrade(self):
+    def place_and_upgrade(self, allowed_money):
+        self.context.log_info(f"{allowed_money=}")
+        place_money = 0
+        upgrade_money = 0
         if not self.to_upgrade:
-            self.place()
+            place_money = self.place(allowed_money)
+            allowed_money -= place_money
             self.to_upgrade = True
         else:
-            self.upgrade(self.monkey_to_upgrade)
+            upgrade_money = self.upgrade(self.monkey_to_upgrade, allowed_money)
+            allowed_money -= upgrade_money
+        return place_money + upgrade_money
 
     def run(self) -> None:
         self.update_current_money()
 
         self.sending_money -= self.send_eco(self.sending_money)
-        self.place_and_upgrade()
+        self.monkey_money -= self.place_and_upgrade(self.monkey_money)
 
         if self.context.get_current_time() % 1 == 0:
             self.context.display_emote(EMOTES[self.emote_index])
