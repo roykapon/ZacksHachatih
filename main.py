@@ -148,7 +148,19 @@ class MyBot(ArazimBattlesBot):
             
         return False
 
+    def update_current_money(self) -> tuple[int, int]:
+        def get_money_split(money_diff):
+            return int(0.5 * money_diff), money_diff - int(0.5 * money_diff)
+
+        money_diff = self.context.get_money() - (self.sending_money + self.monkey_money)
+        current_sending_money, current_monkey_money = get_money_split(money_diff)
+
+        self.sending_money += current_sending_money
+        self.monkey_money += current_monkey_money
+
+
     def place_and_upgrade(self):
+        current_money = self.context.get_money()
         if not self.to_upgrade:
             self.place()
             self.to_upgrade = True
@@ -157,51 +169,13 @@ class MyBot(ArazimBattlesBot):
             self.monkey_to_upgrade += 1
             self.monkey_to_upgrade %= self.monkey_count()
             self.to_upgrade = False
-    
-
-    def run(self) -> None:
-        if self.context.get_current_time() % 5 == 0:
-            self.context.log_info("Placing Monkeys!")
-
-            # Place Monkeys
-            result = self.context.place_monkey(
-                Monkeys.DART_MONKEY, (24 * self.attempted_position + 24, 400)
-            )
-            if result == Exceptions.OK:
-                self.monkey_count += 1
-                self.monkey_levels.append(0)
-            elif (
-                result == Exceptions.OUT_OF_MAP
-                or result == Exceptions.TOO_CLOSE_TO_BLOON_ROUTE
-                or result == Exceptions.TOO_CLOSE_TO_OTHER_MONKEY
-        ):
-            self.context.log_warning(f"Couldn't place monkey because of: {result}")
-            self.attempted_position += 1
-
-
-    def upgrade(self, monkey_index):
-        m_type = self.monkey_types[monkey_index]
-        if self.monkey_levels[monkey_index][0] < UPGRADES[m_type][0]:
-            if self.context.upgrade_monkey(monkey_index, True):
-                self.monkey_levels[monkey_index][0] += 1
-        elif self.monkey_levels[monkey_index][1] < UPGRADES[m_type][1]:
-            if self.context.upgrade_monkey(monkey_index, False):
-                self.monkey_levels[monkey_index][1] += 1
-
-
-
-    def place_and_upgrade(self):
-        curr_money = self.context.get_money()
-        self.upgrade()
-        self.place()
-        return curr_money - self.context.get_money()
-
+        return current_money - self.context.get_money()
 
 
     def run(self) -> None:
         self.update_current_money()
 
-        self.sending_money -= self.send_bloons()
+        self.sending_money -= self.send_bloons(self.sending_money)
         self.monkey_money -= self.place_and_upgrade()
 
         if self.context.get_current_time() % 1 == 0:
@@ -215,6 +189,7 @@ class MyBot(ArazimBattlesBot):
 
         # Target Bloons
         self.target_monkeys()
+
 
     def target_monkeys(self) -> None:
         current_index = self.context.get_current_player_index()
@@ -235,6 +210,7 @@ class MyBot(ArazimBattlesBot):
         Sends bloons with up to `money` cost, returns how much money was
         actually spent.
         """
+        starting_money = self.context.get_money()
         time = self.context.get_current_time()
         players = set(range(self.context.get_player_count()))
         enemies = players - {self.context.get_current_player_index()}
