@@ -84,6 +84,10 @@ class MyBot(ArazimBattlesBot):
             self.attempted_position += 1
 
     def upgrade(self, monkey_index):
+        if monkey_index >= self.monkey_count:
+            self.to_upgrade = False
+            return False
+        
         m_type = self.monkey_types[monkey_index]
         if self.monkey_levels[monkey_index][0] < UPGRADES[m_type][0]:
             if self.context.upgrade_monkey(monkey_index, True):
