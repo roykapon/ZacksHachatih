@@ -128,7 +128,7 @@ class MyBot(ArazimBattlesBot):
     monkey_types = []
     to_upgrade = False
     monkey_to_upgrade = 0
-    
+
 
     def setup(self) -> None:
         self.context.ban_monkey(Monkeys.NINJA_MONKEY)
@@ -248,9 +248,7 @@ class MyBot(ArazimBattlesBot):
         """
         starting_money = self.context.get_money()
         time = self.context.get_current_time()
-        players = set(range(self.context.get_player_count()))
-        enemies = players - {self.context.get_current_player_index()}
-        index = list(enemies)[0]
+        enemy = self.get_player_to_attack()
         if time < 29:
             return 0
 
@@ -271,9 +269,17 @@ class MyBot(ArazimBattlesBot):
 
         spent = 0
         while money >= BLOON_COST[send_bloon]:
-            result = self.context.send_bloons(index, send_bloon)
+            result = self.context.send_bloons(enemy, send_bloon)
             spent += BLOON_COST[send_bloon]
             # self.context.log_info(f"Sending {send_bloon}: {result}")
             money -= BLOON_COST[send_bloon]
 
         return spent
+
+
+    def get_player_to_attack(self):
+        players = set(range(self.context.get_player_count()))
+        enemies = players - {self.context.get_current_player_index()}
+        enemies = {player for player in enemies if self.context.is_player_active(player)}
+        return list(enemies)[0]
+
