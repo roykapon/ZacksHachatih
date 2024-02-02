@@ -52,3 +52,5 @@ class MyBot(ArazimBattlesBot):
             targets = self.context.get_monkey_targets(monkey_index)
             if len(targets) > 0:
                 self.context.target_bloon(monkey_index, targets[0].index)
+
+        test()
