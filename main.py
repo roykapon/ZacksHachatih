@@ -93,18 +93,25 @@ class MyBot(ArazimBattlesBot):
             if Monkeys.TACK_SHOOTER not in banned:
                 pos = (positions["tack"][self.attempted_position][0], positions["tack"][self.attempted_position][1])
                 return Monkeys.TACK_SHOOTER, pos
-            elif Monkeys.DART_MONKEY not in banned:
-                return Monkeys.DART_MONKEY, pos
-            else:
-                return Monkeys.NINJA_MONKEY, pos
-            
-        else:
-            if Monkeys.DART_MONKEY not in banned:
-                return Monkeys.DART_MONKEY, pos
             elif Monkeys.NINJA_MONKEY not in banned:
                 return Monkeys.NINJA_MONKEY, pos
             else:
-                return Monkeys.SNIPER_MONKEY, pos
+                return Monkeys.DART_MONKEY, pos
+        elif self.context.get_current_time() > 230:
+            if Monkeys.SUPER_MONKEY not in banned:
+                return Monkeys.SUPER_MONKEY, pos
+            elif Monkeys.NINJA_MONKEY not in banned:
+                return Monkeys.NINJA_MONKEY, pos
+            else:
+                return Monkeys.DART_MONKEY, pos
+            
+        else:
+            if Monkeys.NINJA_MONKEY not in banned:
+                return Monkeys.NINJA_MONKEY, pos
+            elif Monkeys.DART_MONKEY not in banned:
+                return Monkeys.DART_MONKEY, pos
+            else:
+                return Monkeys.TACK_SHOOTER, pos
 
     def place(self):
         m_type, pos = self.chose_place_and_type_to_place()
@@ -124,6 +131,10 @@ class MyBot(ArazimBattlesBot):
             self.attempted_position += 1
 
     def upgrade(self, monkey_index):
+        if monkey_index >= self.monkey_count:
+            self.to_upgrade = False
+            return False
+        
         m_type = self.monkey_types[monkey_index]
         if self.monkey_levels[monkey_index][0] < UPGRADES[m_type][0]:
             if self.context.upgrade_monkey(monkey_index, True):
@@ -135,6 +146,10 @@ class MyBot(ArazimBattlesBot):
                 self.monkey_levels[monkey_index][1] += 1
                 return True
             
+        if self.monkey_levels[monkey_index][1] >= UPGRADES[m_type][1] and self.monkey_levels[monkey_index][0] >= UPGRADES[m_type][0]:
+            self.monkey_to_upgrade += 1
+            self.monkey_to_upgrade %= self.monkey_count
+            self.to_upgrade = False
         return False
 
     def place_and_upgrade(self):
@@ -143,9 +158,6 @@ class MyBot(ArazimBattlesBot):
             self.to_upgrade = True
         else:
             self.upgrade(self.monkey_to_upgrade)
-            self.monkey_to_upgrade += 1
-            self.monkey_to_upgrade %= self.monkey_count
-            self.to_upgrade = False
     
 
     def run(self) -> None:
@@ -165,9 +177,6 @@ class MyBot(ArazimBattlesBot):
             self.context.bloon_boost()
 
         for monkey_index in range(self.monkey_count):
-            # Upgrade Monkeys
-            if self.context.get_current_time() > 20:
-                self.upgrade(monkey_index)
 
             # Target Bloons
             targets = self.context.get_monkey_targets(monkey_index)
