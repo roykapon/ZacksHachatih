@@ -69,7 +69,8 @@ LOCATIONS = {
     ],
 }
 
-MONKEY_PREFERENCE = [Monkeys.DART_MONKEY, Monkeys.NINJA_MONKEY, Monkeys.SNIPER_MONKEY]
+MONKEY_PREFERENCE = [Monkeys.DART_MONKEY, Monkeys.NINJA_MONKEY, Monkeys.TACK_SHOOTER]
+MONKEY_PREFERENCE_LATEGAME = [Monkeys.SUPER_MONKEY, Monkeys.NINJA_MONKEY, Monkeys.TACK_SHOOTER]
 
 BLOON_COST: dict[EcoBloons, int] = {
     EcoBloons.GROUPED_RED: 25,
@@ -97,14 +98,17 @@ class MyBot(ArazimBattlesBot):
         if self.context.get_current_time() == 0:
             return
         banned = set(self.context.get_banned_monkeys())
-        unbanned = list(set(MONKEY_PREFERENCE) - banned)
-        chosen = min(unbanned, key=lambda m: MONKEY_PREFERENCE.index(m))
+        monkey_preference = MONKEY_PREFERENCE_LATEGAME if self.context.get_current_time() > 200 else MONKEY_PREFERENCE
+        unbanned = list(set(monkey_preference) - banned)
+        chosen = min(unbanned, key=lambda m: monkey_preference.index(m))
         return chosen
 
     def get_bloon_money(self) -> int:
         time = self.context.get_current_time()
-        if 0 <= time % 25 <= 5:
-            return max(0, self.total_money - self.sent_money)
+        # if 0 <= time % 25 <= 10:
+            # return max(0, self.total_money - self.sent_money)
+        # self.context.log_info(f"total money: {self.total_money}, sent money: {self.sent_money}, diff: {self.total_money - self.sent_money}")
+        return max(0, self.total_money * 0.3 - self.sent_money)
         return 0
 
     def setup(self) -> None:
@@ -113,8 +117,7 @@ class MyBot(ArazimBattlesBot):
         self.sent_money = 0
 
     def run(self) -> None:
-        if self.get_bloon_money() > 0:
-            self.context.log_info(f"sending {self.get_bloon_money()} money")
+        # self.context.log_info(f"sending {self.get_bloon_money()} money")
         spent = self.send_bloons(self.get_bloon_money())
         if spent:
             self.sent_money += spent
@@ -124,34 +127,38 @@ class MyBot(ArazimBattlesBot):
             self.total_money += self.context.get_eco()
 
         if self.context.get_current_time() % 5 == 0:
-            self.context.log_info("Placing Monkeys!")
+            while(True):
+                # self.context.log_info("Placing Monkeys!")
 
-            # Place Monkeys
-            self.context.log_info(self.context.get_map())
-            positions = LOCATIONS[self.context.get_map()]
+                # Place Monkeys
+                # self.context.log_info(self.context.get_map())
+                positions = LOCATIONS[self.context.get_map()]
 
-            result = self.context.place_monkey(
-                self.get_monkey(),
-                (
-                    positions[self.attempted_position][0],
-                    positions[self.attempted_position][1],
+                result = self.context.place_monkey(
+                    self.get_monkey(),
+                    (
+                        positions[self.attempted_position][0],
+                        positions[self.attempted_position][1],
+                    )
+                    if self.attempted_position < len(positions)
+                    else (
+                        (24 * self.attempted_position) % 400 + 24,
+                        200 + 24 * (24 * self.attempted_position) // 400,
+                    ),
                 )
-                if self.attempted_position < len(positions)
-                else (
-                    (24 * self.attempted_position) % 400 + 24,
-                    200 + 24 * (24 * self.attempted_position) // 400,
-                ),
-            )
-            if result == Exceptions.OK:
-                self.monkey_count += 1
-                self.monkey_levels.append(0)
-            elif (
-                result == Exceptions.OUT_OF_MAP
-                or result == Exceptions.TOO_CLOSE_TO_BLOON_ROUTE
-                or result == Exceptions.TOO_CLOSE_TO_OTHER_MONKEY
-            ):
-                self.context.log_warning(f"Couldn't place monkey because of: {result}")
-                self.attempted_position += 1
+                if result == Exceptions.OK:
+                    self.monkey_count += 1
+                    self.monkey_levels.append(0)
+                    break
+                elif (
+                    result == Exceptions.OUT_OF_MAP
+                    or result == Exceptions.TOO_CLOSE_TO_BLOON_ROUTE
+                    or result == Exceptions.TOO_CLOSE_TO_OTHER_MONKEY
+                ):
+                    self.context.log_warning(f"Couldn't place monkey because of: {result}")
+                    self.attempted_position += 1
+                else:
+                    break
 
         if self.context.get_current_time() % 1 == 0:
             self.context.display_emote(EMOTES[self.emote_index])
@@ -165,7 +172,7 @@ class MyBot(ArazimBattlesBot):
         for monkey_index in range(self.monkey_count):
             # Upgrade Monkeys
             if self.context.get_current_time() > 20:
-                if self.monkey_levels[monkey_index] < 4:
+                if self.monkey_levels[monkey_index] < 3:
                     if self.context.upgrade_monkey(monkey_index, True):
                         self.monkey_levels[monkey_index] += 1
 
@@ -194,12 +201,13 @@ class MyBot(ArazimBattlesBot):
 
         elif 161 <= time < 196:
             send_bloon = EcoBloons.GROUPED_YELLOW
-        elif 196 <= time < 237:
+        # elif 196 <= time < 237:
+        elif 196 <= time:
             send_bloon = EcoBloons.GROUPED_PINK
-        elif 237 <= time < 275:
-            send_bloon = EcoBloons.GROUPED_WHITE
-        elif 275 <= time:
-            send_bloon = EcoBloons.GROUPED_BLACK
+        # elif 237 <= time < 275:
+        #     send_bloon = EcoBloons.GROUPED_WHITE
+        # elif 275 <= time:
+        #     send_bloon = EcoBloons.GROUPED_BLACK
 
         spent = 0
         while money >= BLOON_COST[send_bloon]:
