@@ -4,6 +4,15 @@ from api import ArazimBattlesBot, Emote, Exceptions, Monkeys, Maps
 # Only pick the cool emotes of course
 EMOTES = [Emote.THUMBS_DOWN]
 
+UPGRADES = {
+    Monkeys.DART_MONKEY : (3,0),
+    Monkeys.TACK_SHOOTER : (0,2),
+    Monkeys.NINJA_MONKEY : (3,0),
+    Monkeys.SNIPER_MONKEY : (1,1),
+    Monkeys.SUPER_MONKEY : (1,1),
+    Monkeys.BOMB_TOWER : (1,0)
+}
+
 BLOON_HEALTH: dict[Bloons, int] = {
     Bloons.RED: 1,
     Bloons.BLUE: 2,
