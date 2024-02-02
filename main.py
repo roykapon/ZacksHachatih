@@ -71,6 +71,9 @@ class MyBot(ArazimBattlesBot):
     emote_index = 0
 
     monkey_types = []
+    to_upgrade = False
+    monkey_to_upgrade = 0
+    
 
     def setup(self) -> None:
         self.context.ban_monkey(Monkeys.NINJA_MONKEY)
@@ -117,12 +120,24 @@ class MyBot(ArazimBattlesBot):
         if self.monkey_levels[monkey_index][0] < UPGRADES[m_type][0]:
             if self.context.upgrade_monkey(monkey_index, True):
                 self.monkey_levels[monkey_index][0] += 1
-        elif self.monkey_levels[monkey_index][1] < UPGRADES[m_type][1]:
+                return True
+            
+        if self.monkey_levels[monkey_index][1] < UPGRADES[m_type][1]:
             if self.context.upgrade_monkey(monkey_index, False):
                 self.monkey_levels[monkey_index][1] += 1
+                return True
+            
+        return False
 
-    def place_and_upgrade(self)
-        self.place()
+    def place_and_upgrade(self):
+        if not self.to_upgrade:
+            self.place()
+            self.to_upgrade = True
+        else:
+            self.upgrade(self.monkey_to_upgrade)
+            self.monkey_to_upgrade += 1
+            self.monkey_to_upgrade %= self.monkey_count()
+            self.to_upgrade = False
     
 
     def run(self) -> None:
