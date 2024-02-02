@@ -44,7 +44,8 @@ class MyBot(ArazimBattlesBot):
             temp = self.attempted_position % len(positions["dart"]) + 2
             if temp >= len(positions["tack"]):
                 pos = ((24 * self.attempted_position) % 400 + 24, 200 + 24 * (24 * self.attempted_position) // 400)
-            pos = (positions["tack"][temp][0], positions["tack"][temp][1])
+            else:
+                pos = (positions["tack"][temp][0], positions["tack"][temp][1])
             
         else:
             pos = (positions["dart"][self.attempted_position][0], positions["dart"][self.attempted_position][1])
