@@ -1,8 +1,14 @@
-from api import ArazimBattlesBot, Emote, Exceptions, Monkeys
+from api import ArazimBattlesBot, Emote, Exceptions, Monkeys, Maps
 
 # Only pick the cool emotes of course
 EMOTES = [Emote.NONE, Emote.COOL, Emote.LAUGHING, Emote.LOVE]
 
+LOCATIONS = {
+    Maps.YELLOW_BRICK: [[230,448],[430,176],[345,182],[262,256],[282,445],[306,219],[248,186],[394,137],[323,264],[325,419],[372,223],[225,141],[153,383]],
+    Maps.TEMPLE: [[74,531],[166,420],[127,483],[227,378],[268,312],[333,250],[178,480],[282,373],[65,474],[227,438],[168,367]],
+    Maps.SHAPES: [[212,282],[122,350],[68,568],[184,371],[178,318],[236,401],[122,287],[71,167]],
+    Maps.INTERCHANGE: [[216,272],[146,415],[289,490],[318,289],[106,348],[207,364],[256,346],[196,485]]
+}
 
 class MyBot(ArazimBattlesBot):
     monkey_count = 0
@@ -18,8 +24,11 @@ class MyBot(ArazimBattlesBot):
             self.context.log_info("Placing Monkeys!")
 
             # Place Monkeys
+            self.context.log_info(self.context.get_map())
+            positions = LOCATIONS[self.context.get_map()]
+            
             result = self.context.place_monkey(
-                Monkeys.DART_MONKEY, (24 * self.attempted_position + 24, 400)
+                Monkeys.DART_MONKEY, (positions[self.attempted_position][0], positions[self.attempted_position][1])
             )
             if result == Exceptions.OK:
                 self.monkey_count += 1
