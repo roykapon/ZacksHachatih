@@ -81,6 +81,22 @@ LOCATIONS = {
 MONKEY_PREFERENCE = [Monkeys.DART_MONKEY, Monkeys.NINJA_MONKEY, Monkeys.SNIPER_MONKEY]
 
 
+BLOON_COST: dict[EcoBloons, int] = {
+    EcoBloons.GROUPED_RED: 25,
+    EcoBloons.SPACED_BLUE: 25,
+    EcoBloons.GROUPED_BLUE: 42,
+    EcoBloons.SPACED_PINK: 42,
+    EcoBloons.GROUPED_GREEN: 60,
+    EcoBloons.GROUPED_YELLOW: 75,
+    EcoBloons.SPACED_WHITE: 90,
+    EcoBloons.GROUPED_PINK: 90,
+    EcoBloons.SPACED_LEAD: 90,
+    EcoBloons.GROUPED_WHITE: 125,
+    EcoBloons.SPACED_ZEBRA: 125,
+    EcoBloons.GROUPED_BLACK: 150,
+}
+
+
 class MyBot(ArazimBattlesBot):
     monkey_count = 0
     monkey_levels = []
@@ -199,10 +215,10 @@ class MyBot(ArazimBattlesBot):
             for target in targets:
                 if target.uid not in damage:
                     damage[target.uid] = 0
-            if BLOON_HEALTH[target.type] == damage[target.uid]:
-                continue
-            self.context.target_bloon(monkey_index, target.index)
-            damage[target.uid] += 1
+                if BLOON_HEALTH[target.type] == damage[target.uid]:
+                    continue
+                self.context.target_bloon(monkey_index, target.index)
+                damage[target.uid] += 1
 
 
     def send_bloons(self, money: int) -> int:
