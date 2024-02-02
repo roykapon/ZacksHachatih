@@ -183,7 +183,7 @@ class MyBot(ArazimBattlesBot):
         else:
             self.upgrade(self.monkey_to_upgrade)
             self.monkey_to_upgrade += 1
-            self.monkey_to_upgrade %= self.monkey_count()
+            self.monkey_to_upgrade %= self.monkey_count
             self.to_upgrade = False
         return current_money - self.context.get_money()
 
