@@ -91,14 +91,27 @@ class MyBot(ArazimBattlesBot):
                 return Monkeys.SNIPER_MONKEY
             
     
+    def get_bloon_money(self) -> int:
+        time = self.context.get_current_time()
+        if 0 <= time % 50 <= 3:
+            return max(0, self.total_money - self.sent_money)
+        # return max(0, self.total_money // 2 - self.sent_money)
+        return 0
+
     def setup(self) -> None:
-        self.context.ban_monkey(Monkeys.TACK_SHOOTER) # ! TO CHANGE
+        self.context.ban_monkey(Monkeys.DART_MONKEY)
+        self.total_money = 0
+        self.sent_money = 0
 
     def run(self) -> None:
-        spent = self.send_bloons(self.context.get_money())
+        self.context.log_info(f"sending {self.get_bloon_money()} money")
+        spent = self.send_bloons(self.get_bloon_money())
         if spent:
+            self.sent_money += spent
             # self.context.log_info(f"spent {spent}.")
-            pass
+
+        if self.context.get_current_time() % 3 == 0:
+            self.total_money += self.context.get_eco()
 
         if self.context.get_current_time() % 5 == 0:
             self.context.log_info("Placing Monkeys!")
@@ -184,6 +197,8 @@ class MyBot(ArazimBattlesBot):
         spent = 0
         while money >= BLOON_COST[send_bloon]:
             result = self.context.send_bloons(index, send_bloon)
+            if result != Exceptions.OK:
+                return spent
             spent += BLOON_COST[send_bloon]
             # self.context.log_info(f"Sending {send_bloon}: {result}")
             money -= BLOON_COST[send_bloon]
